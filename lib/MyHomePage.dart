@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter_calculator/Button.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -8,96 +8,107 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String data = "";
-  double ans;
-  double n1 = 0.0;
-  double n2 = 0.0;
+  double ans =0.0;
   String operand = '';
   int start=0;
+  Parser parser = new Parser();
+  Expression expression;
+  String equation = "";
 
   void pressed(String s){
     if(s != "AC" && s !="backspace" && s != "equal"){
-      if(s=="x" || s=="/" || s=="+" || s=="-"){
+      if(s=="x" || s=="÷" || s=="+" || s=="-"){
         setState(() {
-          n1 = n1 == 0.00 ?double.parse(data) : n1 = ans ;
           data+=s;
-          operand = s;
           start = data.length;
+          operand = s;
         });
+        if(s=='x')
+          s='*';
+        if(s=='÷')
+          s='/';
+        //
+        equation +=s;
       }else if(s=='%') {
         setState(() {
+          print("It's operand:"+operand);
           if(operand == '') {
-            if (n1 == 0.00 || n1 == null || n1 == 0.0)
-              n1 = double.parse(data);
-            else
-              n1 = ans ;
-            n1 = n1 / 100.00;
-            data = n1.toString();
-            ans = double.parse(data);
+            ans = double.parse(data)/100;
+            data = ans.toString();
           }else{
             String temp = data.substring(start);
-            n2 = double.parse(temp);
-            n2 = n2/100.00;
+            print("its temp"+temp);
+            print(start);
+            String per = data.substring(0,start-1);
+            print(per);
+            expression = parser.parse(per);
+            double p = expression.evaluate(EvaluationType.REAL, null );
+
+            double n2 = double.parse(temp);
+            print(n2);
+            n2 = n2/100.00*p;
             String x = n2.toString();
             data = data.substring(0,start) + x;
+            //
+            equation = data;
           }
         });
       }else {
         setState(() {
           data += s;
         });
+        equation += s;
       }
     }else{
       if(s == "AC"){
         setState((){
           data="";
           ans = 0.00;
-          n1 = 0.00;
-          n2 = 0.00;
           operand = "";
+          equation = "";
         });
       }
       if(s == "backspace"){
         setState(() {
-          data=data.substring(0,data.length-1);
-        });
+          if(data!="") {
+            data = data.substring(0, data.length - 1);
+            equation = equation.substring(0, equation.length - 1);
+          }
+          });
       }
       if(s=="equal"){
         setState(() {
-          String temp = data.substring(start);
-          n2 = double.parse(temp);
-          print(n2);
-          switch(operand){
-            case "/":
-              ans = n1/n2;
-              break;
-            case "x":
-              ans = n1*n2;
-              break;
-            case "+":
-              ans = n1+n2;
-              break;
-            case "-":
-              ans = n1-n2;
-              break;
-          }
+          data="";
+          print(equation);
+          expression = parser.parse(equation);
+          print("Expression is "+ expression.toString());
+          ans = expression.evaluate(EvaluationType.REAL, null );
         });
       }
     }
+    setState(() {
+      try{
+        expression = parser.parse(equation);
+        ans = expression.evaluate(EvaluationType.REAL, null );
+      }catch(e){
+
+      }
+    });
   }
 
   Widget Button(String string){
-  return new SizedBox(
+    return new SizedBox(
       width: (MediaQuery.of(context).size.width / 4.00) - 0.75,
       height: 70.00,
       child: new FlatButton(
         onPressed:()=> pressed(string),
         child: Text(
           string,
-          style: TextStyle(fontSize: 25.00, color: Colors.blueGrey),
+          style: TextStyle(fontSize: 25.00, color: Color.fromRGBO(111, 116, 128, 1.00)),
         ),
-        color: Colors.white,
-        highlightColor: Colors.grey.withOpacity(0.1),
-        splashColor: Colors.grey.withOpacity(0.1),
+        color: Color.fromRGBO(255, 255, 255, 1.00),
+        highlightColor: Color(0xFFE1E1E2),
+        splashColor: Color(0xFFE1E1E2),
       ));
   }
 
@@ -106,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var deviceSize = MediaQuery.of(context).size;
     return Scaffold(
       body: Container(
-        color: Colors.lightBlueAccent.withOpacity(0.05),
+        color: Color.fromRGBO(241,243,243,1.00),
         child: Column(mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
@@ -116,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new SizedBox(width: deviceSize.width,child: new Text(ans.toString(),style: TextStyle(fontSize: 55.00,color: Colors.black,),textDirection: TextDirection.rtl,)),
+                  child: new SizedBox(width: deviceSize.width,child: new Text(ans.toString(),style: TextStyle(fontSize: 55.00,color: Color.fromRGBO(24, 24, 24, 1.00),),textDirection: TextDirection.rtl,)),
                 ),
               ),
             ),
@@ -125,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: new SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: new SizedBox(width: deviceSize.width,child: new Text(data ,style: TextStyle(fontSize: 45.00,color: Colors.black.withOpacity(0.70),),)),
+                  child: new SizedBox(width: deviceSize.width,child: new Text(data ,style: TextStyle(fontSize: 45.00,color: Color.fromRGBO(168, 170, 170, 1.00),),)),
                 ),
               ),
             ),
@@ -133,8 +144,9 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 Column(
                   children: <Widget>[
-                    new SizedBox(width: (deviceSize.width/4.00) - 0.75,height: 70.00,child: new FlatButton(onPressed: () => pressed("AC") , child: Text("AC",style: TextStyle(fontSize: 25.00,color: Colors.deepOrange),),color: Colors.white,highlightColor: Colors.grey.withOpacity(0.1),splashColor: Colors.grey.withOpacity(0.1),)),
-                    new SizedBox(height: 1.00,),
+                    new SizedBox(width: (deviceSize.width/4.00) - 0.75,height: 70.00,child: new FlatButton(onPressed: () => pressed("AC") , child: Text("AC",style: TextStyle(fontSize: 25.00,color: Color.fromRGBO(255, 93, 0, 1.00)),),color: Color.fromRGBO(255, 255, 255, 1.00),highlightColor: Color(0xFFE1E1E2),splashColor: Color(0xFFE1E1E2),)),
+                    //Color not visible
+                    new SizedBox(height: 1.00,child: Container(color: Color.fromRGBO(195, 197, 198, 1.00),),),
                     Button("7"),
                     new SizedBox(height: 1.00,),
                     Button("4"),
@@ -147,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 new SizedBox(width: 1.00,),
                 Column(
                   children: <Widget>[
-                    new SizedBox(width: (deviceSize.width/4.00) - 0.75,height: 70.00,child: new FlatButton(onPressed: () => pressed("backspace") , child: Icon(Icons.backspace,color: Colors.blueGrey,),color: Colors.white,highlightColor: Colors.grey.withOpacity(0.1),splashColor: Colors.grey.withOpacity(0.1),)),
+                    new SizedBox(width: (deviceSize.width/4.00) - 0.75,height: 70.00,child: new FlatButton(onPressed: () => pressed("backspace") , child: Icon(Icons.backspace,color: Color.fromRGBO(111, 116, 128, 1.00),),color: Color.fromRGBO(255, 255, 255, 1.00),highlightColor: Color(0xFFE1E1E2),splashColor: Color(0xFFE1E1E2),)),
                     new SizedBox(height: 1.00,),
                     Button("8"),
                     new SizedBox(height: 1.00,),
@@ -181,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     new SizedBox(height: 1.00,),
                     Button("+"),
                     new SizedBox(height: 1.00,),
-                    new SizedBox(width: (deviceSize.width/4.00) - 0.75,height: 141.00,child: new FlatButton(onPressed: () => pressed("equal") , child: Text("=",style: TextStyle(fontSize:30.00,color: Colors.white),),color: Colors.deepOrange,highlightColor: Colors.deepOrange.withOpacity(0.1),splashColor: Colors.deepOrange.withOpacity(0.1),)),
+                    new SizedBox(width: (deviceSize.width/4.00) - 0.75,height: 141.00,child: new FlatButton(onPressed: () => pressed("equal") , child: Text("=",style: TextStyle(fontSize:30.00,color: Color.fromRGBO(255, 255, 255, 1.00)),),color: Color.fromRGBO(251, 119, 48, 1.00),highlightColor: Color.fromRGBO(224, 106, 43, 1.00),splashColor: Color.fromRGBO(224, 106, 43, 1.00),)),
                   ],
                 ),
               ],
