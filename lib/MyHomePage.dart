@@ -31,10 +31,11 @@ class _MyHomePageState extends State<MyHomePage> {
         equation +=s;
       }else if(s=='%') {
         setState(() {
-          print("It's operand:"+operand);
           if(operand == '') {
+            print("yess");
             ans = double.parse(data)/100;
             data = ans.toString();
+            equation = data;
           }else{
             String temp = data.substring(start);
             print("its temp"+temp);
