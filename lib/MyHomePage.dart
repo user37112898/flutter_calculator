@@ -14,6 +14,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Parser parser = new Parser();
   Expression expression;
   String equation = "";
+  bool _equalpressed;
 
   void pressed(String s){
     if(s != "AC" && s !="backspace" && s != "equal"){
@@ -55,6 +56,12 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         });
       }else {
+        if(_equalpressed==true && data == ""){
+          _equalpressed=false;
+          ans=0.0;
+          data="";
+          equation="";
+        }
         setState(() {
           data += s;
         });
@@ -74,11 +81,13 @@ class _MyHomePageState extends State<MyHomePage> {
           if(data!="") {
             data = data.substring(0, data.length - 1);
             equation = equation.substring(0, equation.length - 1);
+            print("eq is "+ equation);
           }
           });
       }
       if(s=="equal"){
         setState(() {
+          _equalpressed=true;
           data="";
           print(equation);
           expression = parser.parse(equation);
@@ -89,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     setState(() {
       try{
-        expression = parser.parse(equation);
+        expression = ((data != "") ? parser.parse(equation) : parser.parse("0"));
         ans = expression.evaluate(EvaluationType.REAL, null );
       }catch(e){
 
